@@ -1,0 +1,27 @@
+os: linux
+
+dist: xenial
+
+if: commit_message !~ /Travis beautify build/
+
+python:
+    - "3.7"
+    - "3.8"
+    - "nightly"
+
+before_install:
+    - git remote remove origin
+    - git remote add origin https://$KEANU_TOKEN@github.com/TKLProjects/$GHREPO.git
+
+install:
+    - pip install black
+    - pip install -r requirements.txt
+    - pip install .
+
+script:
+    - git config --global user.email "hondzee69@gmail.com"
+    - git config --global user.name "TravBot"
+    - black main.py
+    - git add .
+    - git commit --message "Travis beautify build $TRAVIS_BUILD_NUMBER" || true
+    - git push --set-upstream origin HEAD:$TRAVIS_BRANCH
