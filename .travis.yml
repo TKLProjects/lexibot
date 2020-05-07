@@ -14,14 +14,14 @@ before_install:
     - git remote add origin https://$KEANU_TOKEN@github.com/$GHREPO.git
 
 install:
-    - pip3 install black
-    - pip3 install -r requirements.txt
-    - pip3 install .
+    - pip install --upgrade autopep8 --user
+    - pip install -r requirements.txt
+    - pip install .
 
 script:
     - git config --global user.email "hondzee69@gmail.com"
     - git config --global user.name "TravBot"
-    - black main.py
+    - autopep8 --in-place --aggressive --aggressive main.py
     - git add .
     - git commit --message "Travis beautify build $TRAVIS_BUILD_NUMBER" || true
     - git push --set-upstream origin HEAD:$TRAVIS_BRANCH

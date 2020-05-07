@@ -3,12 +3,15 @@ import os
 import discord
 from discord.ext import commands
 import json
+import requests
+import datetime
 
 # Dotenv token business
 import dotenv
 from dotenv import load_dotenv
 load_dotenv()
 token = os.getenv("TOKEN")
+weathertoken = os.getenv("WEATHERTOKEN")
 
 # Logging
 import logging
@@ -111,4 +114,38 @@ async def status(ctx, status):
 async def create(ctx, cname):
     guild = ctx.message.guild
     await guild.create_text_channel(cname)
+
+# Weather command
+@client.command(name="weather")
+async def _weather(ctx, city_name):
+    base_url = "http://api.openweathermap.org/data/2.5/weather?"
+    complete_url = base_url + "appid=" + weathertoken + "&q=" + city_name
+    response = requests.get(complete_url)
+
+    res = response.json()
+
+    if res["cod"] != "404":
+        weather = res["main"]
+
+        current_temperature = "Temperature:", str(int(weather["temp"]-273))
+        current_pressure = "Pressure: " + str(weather["pressure"])
+        current_humidity = "Humidity: " + str(weather["humidity"])
+        
+        weat = res["weather"]
+        weather_description = "Description: " + weat[0]["description"]
+
+        embed = discord.Embed()
+        # embed.set_title("Weather")
+        embed.set_author(name=f"{client.user.name}", icon_url=client.user.avatar_url)
+        embed.set_footer(f"{datetime.utcnow().year}")
+        embed.add_field(name="Temperature", value=current_temperature)
+        embed.add_field(name="Pressure", value=current_pressure)
+        embed.add_field(name="Humidity", value=current_humidity)
+        await ctx.send(embed)
+        
+        # await ctx.send("Temperature: " + str(int(weather["temp"]-273)) + "\n"+ current_pressure + "\n" + current_humidity + "\n" + weather_description)
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("City not found!")
+
 client.run(token)
