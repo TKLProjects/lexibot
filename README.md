@@ -1,2 +1,2 @@
 # lexibot
-My primary Discord bot built on Python with Discord.Py
+My primary Discord bot built on Python with Discord.py
