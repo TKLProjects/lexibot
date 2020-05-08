@@ -11,3 +11,7 @@ You can set the bot up by cloning the repo to your local machine.
 Rename `env_example.txt` to `.env` and enter your token.
 
 After that, you can run `<python command> main.py` to start the bot
+
+## Changelog
+
+[Learn about the latest improvements](https://github.com/TKLProjects/lexibot/blob/master/CHANGELOG.md)
