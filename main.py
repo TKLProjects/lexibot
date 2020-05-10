@@ -26,10 +26,8 @@ weathertoken = os.getenv("WEATHERTOKEN")
 def split(word): 
     return [":regional_indicator_" + char + ":" for char in word]
 
-# Superscript translate map
-# superscript_map = {
-#     "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶",
-#     "7": "⁷", "8": "⁸", "9": "⁹"}
+SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 # Logging
 import logging
@@ -197,26 +195,35 @@ async def calc(ctx, n1, op, n2=0):
     """Calculate a mathematical expression. Usage: ?calc <num> <operator> <num>"""
     if op == "+":
         answer = int(n1) + int(n2)
+        equation = f"```{n1}{op}{n2}```"
     elif op == "-":
         answer = int(n1) - int(n2)
+        equation = f"```{n1}{op}{n2}```"
     elif op == "*":
         answer = int(n1) * int(n2)
+        equation = f"```{n1}{op}{n2}```"
     elif op == "/":
         answer = int(n1) / int(n2)
+        equation = f"```{n1}{op}{n2}```"
+    elif op == "!" or op == "fac":
+        answer = str(math.factorial(int(n1)))
+        equation = f'```!{n1}```'
     elif op == "pow":
         answer = math.pow(int(n1), int(n2))
+        equation = f"```{n1}" + f"{n2}".translate(SUP) + "```"
     elif op == "sqrt":
         answer = math.sqrt(int(n1)) 
+        equation = f"```√{n1}```"
     else:
         await ctx.send("Invalid operator!")
 
     calcembed = discord.Embed(title="Calculator", color=0x7ac5c9)    
-    calcembed.add_field(name="Math equation:", value=f"```{n1}{op}{n2}```")
+    calcembed.add_field(name="Math equation:", value=equation)
     calcembed.add_field(name="Answer:", value=f"```{answer}```")
     await ctx.send(embed=calcembed)
 
 # Eval command
-@client.command(name='eval')
+@client.command(name='eval',hidden=True)
 @commands.check(am_owner)
 async def _eval(ctx, *, code):
     """A bad example of an eval command"""
@@ -258,6 +265,38 @@ async def reddit(ctx, subname):
         await ctx.send(embed=redditembed)
     except:
         await ctx.send("This subreddit might be private or non-existant.")
+
+# Avatr command
+@client.command()
+async def avatar(ctx):
+    """Sends you your avatar."""
+    avi_url = ctx.author.avatar_url
+    aviembed = discord.Embed(title="Avatar of " + ctx.author.name,url=avi_url)
+    aviembed.set_image(url=avi_url)
+    await ctx.send(embed=aviembed)
+
+# Userinfo command
+@client.command()
+async def userinfo(ctx):
+    """Displays info about author."""
+    currentDate = datetime.datetime.now()
+    avi_url = ctx.author.avatar_url
+    infoembed = discord.Embed()
+    infoembed.set_author(name=ctx.author.name + "#" + ctx.author.discriminator,icon_url=avi_url)
+    infoembed.add_field(name="Status",value=ctx.author.status)
+    infoembed.add_field(name="Joined at",value=str(ctx.author.joined_at.day) + "-" + str(ctx.author.joined_at.month) + "-" + str(ctx.author.joined_at.year) + " " + str(ctx.author.joined_at.hour) + ":" + str(ctx.author.joined_at.minute))
+    infoembed.add_field(name="Registered at",value=str(ctx.author.created_at.day) + "-" + str(ctx.author.created_at.month) + "-" + str(ctx.author.created_at.year) + " " + str(ctx.author.created_at.hour) + ":" + str(ctx.author.created_at.minute))
+    infoembed.add_field(name="Nickname",value=ctx.author.display_name)
+    infoembed.set_footer(text=str(currentDate.day) + "-" + str(currentDate.month) + "-" + str(currentDate.year) + " " + str(currentDate.hour) + ":" + str(currentDate.minute) + ":" + str(currentDate.second))
+    infoembed.set_thumbnail(url=avi_url)
+    await ctx.send(embed=infoembed)
+
+# VC Rename command
+@client.command()
+async def desc(ctx, *, channelname):
+    channel = ctx.author.voice.channel
+    await channel.connect()
+    await ctx.send("ok")
 
 # Client login
 client.run(token)
