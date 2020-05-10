@@ -1,14 +1,14 @@
 os: linux
 
+language: python
+
 dist: xenial
 
 if: commit_message !~ /Travis beautify build/
-
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
+python:
+    - "3.7"
+    - "3.8"
+    - "nightly"
 
 before_install:
     - git remote remove origin
