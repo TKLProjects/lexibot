@@ -13,7 +13,7 @@ before_install:
     - git remote add origin https://$KEANU_TOKEN@github.com/$GHREPO.git
 
 install:
-    - pip install --upgrade autopep8 --user
+    - pip install --upgrade autopep8
     - pip install -r requirements.txt
     - pip install .
 
