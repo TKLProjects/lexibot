@@ -1,22 +1,20 @@
 os: linux
 
+language: python
+
 dist: xenial
 
 if: commit_message !~ /Travis beautify build/
-
 python:
-    - "3.7"
     - "3.8"
-    - "nightly"
 
 before_install:
     - git remote remove origin
     - git remote add origin https://$KEANU_TOKEN@github.com/$GHREPO.git
 
 install:
-    - pip install --upgrade autopep8 --user
+    - pip install --upgrade autopep8
     - pip install -r requirements.txt
-    - pip install .
 
 script:
     - git config --global user.email "hondzee69@gmail.com"

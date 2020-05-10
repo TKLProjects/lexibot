@@ -1,4 +1,7 @@
 # Imports
+import logging
+from dotenv import load_dotenv
+import dotenv
 import os
 import discord
 from discord.ext import commands
@@ -12,39 +15,49 @@ import math
 
 # Reddit
 import praw
-r = praw.Reddit(client_id='7VN5TAvLSUEMig',client_secret='tNGyfEDSTZrKucum16H3AEbgIuI',user_agent="lexibot")
+r = praw.Reddit(
+    client_id='7VN5TAvLSUEMig',
+    client_secret='tNGyfEDSTZrKucum16H3AEbgIuI',
+    user_agent="lexibot")
 
 
 # Dotenv token business
-import dotenv
-from dotenv import load_dotenv
 load_dotenv()
 token = os.getenv("TOKEN")
 weathertoken = os.getenv("WEATHERTOKEN")
 
 # word split function for regional command
-def split(word): 
+
+
+def split(word):
     return [":regional_indicator_" + char + ":" for char in word]
+
 
 SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
 SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 # Logging
-import logging
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='./botfiles/discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+handler = logging.FileHandler(
+    filename='./botfiles/discord.log',
+    encoding='utf-8',
+    mode='w')
+handler.setFormatter(logging.Formatter(
+    '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
 # Per-server prefixes
+
+
 def get_prefix(client, message):
     with open('./botfiles/prefixes.json', 'r') as f:
         prefixes = json.load(f)
     return prefixes[str(message.guild.id)]
 
+
 # Client initialization
-client = commands.Bot(command_prefix = get_prefix)
+client = commands.Bot(command_prefix=get_prefix)
 
 # Ready event
 @client.event
@@ -52,11 +65,14 @@ async def on_ready():
     print("Ready")
     print("Logged in as:", client.user.name, "(" + str(client.user.id) + ")")
 
+
 async def on_message(self, message):
     if message.author == client.user:
         return
 
 # Owner check
+
+
 def am_owner(ctx):
     return ctx.author.id == 464733215903580160, 465702500146610176, 465662909645848577
 
@@ -76,7 +92,7 @@ async def on_guild_join(guild):
 async def on_guild_remove(guild):
     with open('./botfiles/prefixes.json', 'r') as f:
         prefixes = json.load(f)
-    
+
     prefixes.pop(str(guild.id))
 
     with open('./botfiles/prefixes.json', 'w') as f:
@@ -103,7 +119,7 @@ async def purge(ctx, amount=0):
     if amount == 0:
         await ctx.send("Please provide a number.")
     else:
-        await ctx.channel.purge(limit=amount+1)
+        await ctx.channel.purge(limit=amount + 1)
 
 # Change prefix
 @client.command()
@@ -112,12 +128,12 @@ async def chprefix(ctx, prefix):
     """Change the server prefix. Usage: ?chprefix <prefix>"""
     with open('./botfiles/prefixes.json', 'r') as f:
         prefixes = json.load(f)
-    
+
     prefixes[str(ctx.guild.id)] = prefix
 
     with open('./botfiles/prefixes.json', 'w') as f:
         json.dump(prefixes, f, indent=4)
-    
+
     await ctx.send(f'Prefix changed to: {prefix}')
 
 # Status command
@@ -131,7 +147,7 @@ async def status(ctx, status):
     if status == "idle":
         await client.change_presence(status=discord.Status.idle)
         await ctx.send(f"Changed bot presence to: idle.")
-    if status == 'dnd': 
+    if status == 'dnd':
         await client.change_presence(status=discord.Status.dnd)
         await ctx.send(f"Changed bot presence to: do not disturb.")
     if status == "invisible":
@@ -151,7 +167,7 @@ async def create(ctx, type="text", *, cname):
         await guild.create_voice_channel(cname)
     else:
         await ctx.send("Invalid type!")
-        
+
 
 # Weather command
 @client.command(name="weather")
@@ -161,7 +177,7 @@ async def _weather(ctx, city_name):
     complete_url = base_url + "key=" + weathertoken + "&q=" + city_name
     try:
         response = requests.get(complete_url)
-    except:
+    except BaseException:
         await ctx.send("no")
     res = response.json()
     weather = res["current"]
@@ -178,14 +194,23 @@ async def _weather(ctx, city_name):
     weather_wind_kph = str(weather["wind_kph"])
     weather_wind_dir = str(weather["wind_dir"])
 
-    weatherembed = discord.Embed(title="Weather for " + weather_location, color=0x7ac5c9)
-    weatherembed.set_author(name=f"{client.user.name}", icon_url=client.user.avatar_url)
+    weatherembed = discord.Embed(
+        title="Weather for " +
+        weather_location,
+        color=0x7ac5c9)
+    weatherembed.set_author(
+        name=f"{client.user.name}",
+        icon_url=client.user.avatar_url)
     weatherembed.set_footer(text="https://weatherapi.com")
-    weatherembed.add_field(name="Temperature:",value=current_temperature)
-    weatherembed.add_field(name="Pressure:",value=current_pressure)
-    weatherembed.add_field(name="Humidity:",value=current_humidity)
-    weatherembed.add_field(name="Wind:",value=weather_wind_kph + " km/h " + weather_wind_dir)
-    weatherembed.add_field(name="Time:",value=weather_timezone)
+    weatherembed.add_field(name="Temperature:", value=current_temperature)
+    weatherembed.add_field(name="Pressure:", value=current_pressure)
+    weatherembed.add_field(name="Humidity:", value=current_humidity)
+    weatherembed.add_field(
+        name="Wind:",
+        value=weather_wind_kph +
+        " km/h " +
+        weather_wind_dir)
+    weatherembed.add_field(name="Time:", value=weather_timezone)
     weatherembed.set_thumbnail(url=image)
     await ctx.send(embed=weatherembed)
 
@@ -212,26 +237,25 @@ async def calc(ctx, n1, op, n2=0):
         answer = math.pow(int(n1), int(n2))
         equation = f"```{n1}" + f"{n2}".translate(SUP) + "```"
     elif op == "sqrt":
-        answer = math.sqrt(int(n1)) 
+        answer = math.sqrt(int(n1))
         equation = f"```√{n1}```"
     else:
         await ctx.send("Invalid operator!")
 
-    calcembed = discord.Embed(title="Calculator", color=0x7ac5c9)    
+    calcembed = discord.Embed(title="Calculator", color=0x7ac5c9)
     calcembed.add_field(name="Math equation:", value=equation)
     calcembed.add_field(name="Answer:", value=f"```{answer}```")
     await ctx.send(embed=calcembed)
 
 # Eval command
-@client.command(name='eval',hidden=True)
+@client.command(name='eval', hidden=True)
 @commands.check(am_owner)
 async def _eval(ctx, *, code):
     """A bad example of an eval command"""
-    evalembed = discord.Embed(title="Code Evaluation",color=0x7ac5c9)
-    evalembed.add_field(name="Input:",value=f"```{code}```")
-    evalembed.add_field(name="Output:",value=f"```{eval(code)}```")
+    evalembed = discord.Embed(title="Code Evaluation", color=0x7ac5c9)
+    evalembed.add_field(name="Input:", value=f"```{code}```")
+    evalembed.add_field(name="Output:", value=f"```{eval(code)}```")
     await ctx.send(embed=evalembed)
-
 
 
 # word to regional text [uses split function]
@@ -239,10 +263,10 @@ async def _eval(ctx, *, code):
 async def regional(ctx, *, regio):
     """Turn text into regional emojis. Usage: ?regional <text>"""
     if " " in regio:
-     saferegio = regio.replace(" ", '')
-     regchar = split(saferegio)    
+        saferegio = regio.replace(" ", '')
+        regchar = split(saferegio)
     else:
-     regchar = split(regio)
+        regchar = split(regio)
     upreg = ''.join(regchar)
     lowreg = upreg.lower()
     if "regional_indicator_b" in lowreg:
@@ -258,12 +282,16 @@ async def reddit(ctx, subname):
     try:
         submission = r.subreddit(f"{subname}").random()
         posttime = submission.created_utc
-        realtime = datetime.datetime.utcfromtimestamp(posttime).strftime('%Y-%m-%d %H:%M:%S')
-        redditembed = discord.Embed(title=submission.title,url=submission.url, color=0x7ac5c9)
+        realtime = datetime.datetime.utcfromtimestamp(
+            posttime).strftime('%Y-%m-%d %H:%M:%S')
+        redditembed = discord.Embed(
+            title=submission.title,
+            url=submission.url,
+            color=0x7ac5c9)
         redditembed.set_image(url=submission.url)
         redditembed.set_footer(text="r/" + subname + " | " + realtime)
         await ctx.send(embed=redditembed)
-    except:
+    except BaseException:
         await ctx.send("This subreddit might be private or non-existant.")
 
 # Avatr command
@@ -271,7 +299,7 @@ async def reddit(ctx, subname):
 async def avatar(ctx):
     """Sends you your avatar."""
     avi_url = ctx.author.avatar_url
-    aviembed = discord.Embed(title="Avatar of " + ctx.author.name,url=avi_url)
+    aviembed = discord.Embed(title="Avatar of " + ctx.author.name, url=avi_url)
     aviembed.set_image(url=avi_url)
     await ctx.send(embed=aviembed)
 
@@ -282,12 +310,42 @@ async def userinfo(ctx):
     currentDate = datetime.datetime.now()
     avi_url = ctx.author.avatar_url
     infoembed = discord.Embed()
-    infoembed.set_author(name=ctx.author.name + "#" + ctx.author.discriminator,icon_url=avi_url)
-    infoembed.add_field(name="Status",value=ctx.author.status)
-    infoembed.add_field(name="Joined at",value=str(ctx.author.joined_at.day) + "-" + str(ctx.author.joined_at.month) + "-" + str(ctx.author.joined_at.year) + " " + str(ctx.author.joined_at.hour) + ":" + str(ctx.author.joined_at.minute))
-    infoembed.add_field(name="Registered at",value=str(ctx.author.created_at.day) + "-" + str(ctx.author.created_at.month) + "-" + str(ctx.author.created_at.year) + " " + str(ctx.author.created_at.hour) + ":" + str(ctx.author.created_at.minute))
-    infoembed.add_field(name="Nickname",value=ctx.author.display_name)
-    infoembed.set_footer(text=str(currentDate.day) + "-" + str(currentDate.month) + "-" + str(currentDate.year) + " " + str(currentDate.hour) + ":" + str(currentDate.minute) + ":" + str(currentDate.second))
+    infoembed.set_author(
+        name=ctx.author.name +
+        "#" +
+        ctx.author.discriminator,
+        icon_url=avi_url)
+    infoembed.add_field(name="Status", value=ctx.author.status)
+    infoembed.add_field(name="Joined at", value=str(ctx.author.joined_at.day) +
+                        "-" +
+                        str(ctx.author.joined_at.month) +
+                        "-" +
+                        str(ctx.author.joined_at.year) +
+                        " " +
+                        str(ctx.author.joined_at.hour) +
+                        ":" +
+                        str(ctx.author.joined_at.minute))
+    infoembed.add_field(name="Registered at", value=str(ctx.author.created_at.day) +
+                        "-" +
+                        str(ctx.author.created_at.month) +
+                        "-" +
+                        str(ctx.author.created_at.year) +
+                        " " +
+                        str(ctx.author.created_at.hour) +
+                        ":" +
+                        str(ctx.author.created_at.minute))
+    infoembed.add_field(name="Nickname", value=ctx.author.display_name)
+    infoembed.set_footer(text=str(currentDate.day) +
+                         "-" +
+                         str(currentDate.month) +
+                         "-" +
+                         str(currentDate.year) +
+                         " " +
+                         str(currentDate.hour) +
+                         ":" +
+                         str(currentDate.minute) +
+                         ":" +
+                         str(currentDate.second))
     infoembed.set_thumbnail(url=avi_url)
     await ctx.send(embed=infoembed)
 
